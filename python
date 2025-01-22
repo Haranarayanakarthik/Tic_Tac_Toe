@@ -1,93 +1,81 @@
-//Python Program to play a game
-Tic_Tac_Toe
+//Python progarm to play Tic Tac Toe
 
 import numpy as np
+import tkinter as tk
+from tkinter import messagebox
 import random
-from time import sleep
+
 def create_board():
-	return(np.array([[0, 0, 0],
-					[0, 0, 0],
-					[0, 0, 0]]))
+    return np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+
 def possibilities(board):
-	l = []
+    l = []
+    for i in range(len(board)):
+        for j in range(len(board)):
+            if board[i][j] == 0:
+                l.append((i, j))
+    return l
 
-	for i in range(len(board)):
-		for j in range(len(board)):
+def check_win(board, player):
+    for x in range(len(board)):
+        if all(board[x, :] == player) or all(board[:, x] == player):
+            return True
+    if all([board[i, i] == player for i in range(len(board))]) or all([board[i, len(board)-1-i] == player for i in range(len(board))]):
+        return True
+    return False
 
-			if board[i][j] == 0:
-				l.append((i, j))
-	return(l)
-def random_place(board, player):
-	selection = possibilities(board)
-	current_loc = random.choice(selection)
-	board[current_loc] = player
-	return(board)
-def row_win(board, player):
-	for x in range(len(board)):
-		win = True
-
-		for y in range(len(board)):
-			if board[x, y] != player:
-				win = False
-				continue
-
-		if win == True:
-			return(win)
-	return(win)
-def col_win(board, player):
-	for x in range(len(board)):
-		win = True
-
-		for y in range(len(board)):
-			if board[y][x] != player:
-				win = False
-				continue
-
-		if win == True:
-			return(win)
-	return(win)
-def diag_win(board, player):
-	win = True
-	y = 0
-	for x in range(len(board)):
-		if board[x, x] != player:
-			win = False
-	if win:
-		return win
-	win = True
-	if win:
-		for x in range(len(board)):
-			y = len(board) - 1 - x
-			if board[x, y] != player:
-				win = False
-	return win
 def evaluate(board):
-	winner = 0
+    for player in [1, 2]:
+        if check_win(board, player):
+            return player
+    if np.all(board != 0):
+        return -1  # Draw
+    return 0
 
-	for player in [1, 2]:
-		if (row_win(board, player) or
-				col_win(board, player) or
-				diag_win(board, player)):
+def reset_board():
+    global board, buttons, current_player
+    board = create_board()
+    current_player = 1
+    for i in range(3):
+        for j in range(3):
+            buttons[i][j].config(text="", state=tk.NORMAL)
 
-			winner = player
+def handle_click(row, col):
+    global board, current_player
 
-	if np.all(board != 0) and winner == 0:
-		winner = -1
-	return winner
-def play_game():
-	board, winner, counter = create_board(), 0, 1
-	print(board)
-	sleep(2)
+    if board[row, col] == 0 and evaluate(board) == 0:
+        board[row, col] = current_player
+        buttons[row][col].config(text='X' if current_player == 1 else 'O', state=tk.DISABLED)
 
-	while winner == 0:
-		for player in [1, 2]:
-			board = random_place(board, player)
-			print("Board after " + str(counter) + " move")
-			print(board)
-			sleep(2)
-			counter += 1
-			winner = evaluate(board)
-			if winner != 0:
-				break
-	return(winner)
-print("Winner is: " + str(play_game()))
+        winner = evaluate(board)
+        if winner == 1:
+            messagebox.showinfo("Game Over", "Player X wins!")
+            reset_board()
+        elif winner == 2:
+            messagebox.showinfo("Game Over", "Player O wins!")
+            reset_board()
+        elif winner == -1:
+            messagebox.showinfo("Game Over", "It's a draw!")
+            reset_board()
+
+        current_player = 2 if current_player == 1 else 1
+
+# Initialize the game variables
+board = create_board()
+current_player = 1
+
+# Create the GUI
+root = tk.Tk()
+root.title("Tic Tac Toe")
+
+buttons = []
+for i in range(3):
+    row = []
+    for j in range(3):
+        button = tk.Button(root, text="", font=('normal', 20), width=5, height=2, 
+                           command=lambda row=i, col=j: handle_click(row, col))
+        button.grid(row=i, column=j)
+        row.append(button)
+    buttons.append(row)
+
+root.mainloop()
