@@ -1,5 +1,3 @@
-//Python progarm to play Tic Tac Toe
-
 import numpy as np
 import tkinter as tk
 from tkinter import messagebox
